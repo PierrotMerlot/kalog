@@ -1,4 +1,7 @@
 :- use_module(graficos).
+:- use_module(generador).
+:- use_module(resolver_clpfd).
+:- use_module(resolver_std).
 
 :- pce_image_directory('./').
 
@@ -41,18 +44,42 @@ juego(3,[
 
 % kalog(+Tablero) <- despliega un Tablero y permite que el usuario humano lo complete.
 kalog(Tablero) :-
+    nb_setval(inicial, Tablero),
+    nb_setval(actual, Tablero),
     tam_tablero(Tablero,F,C),
     gr_crear_tablero(F, C, [boton('Reiniciar',reiniciar),boton('Resolver',resolver), boton('Salir',salir)], Visual),
+    rellenar_tablero(Visual,Tablero,1,1),
     loop(Visual,Tablero,e(none,none)),
     !,
+    nb_delete(inicial),
+    nb_delete(actual),
     gr_destruir(Visual).
+
+rellenar_tablero(_,[],_,_):- !.
+rellenar_tablero(Visual,[X|Xs],F,C):-rellenar_fila(Visual,F,C,X), !, F2 is F+1, rellenar_tablero(Visual,Xs,F2,C).
+
+rellenar_fila(_,_,_,[]):- !.
+rellenar_fila(Visual,F,C,[X|Xs]):- integer(X),!, gr_dibujar_numero(Visual,F,C,X), C2 is C+1,rellenar_fila(Visual,F,C2,Xs).
+rellenar_fila(Visual,F,C,[X|Xs]):- nonvar(X), X=n,!, gr_dibujar_casillero(Visual,F,C,0,0),C2 is C+1,rellenar_fila(Visual,F,C2,Xs).
+rellenar_fila(Visual,F,C,[f(X)|Xs]):- integer(X),!, gr_dibujar_casillero(Visual,F,C,X,0),C2 is C+1,rellenar_fila(Visual,F,C2,Xs).
+rellenar_fila(Visual,F,C,[c(X)|Xs]):- integer(X),!, gr_dibujar_casillero(Visual,F,C,0,X),C2 is C+1,rellenar_fila(Visual,F,C2,Xs).
+rellenar_fila(Visual,F,C,[p(X1,X2)|Xs]):-integer(X1),integer(X2), !, gr_dibujar_casillero(Visual,F,C,X1,X2),C2 is C+1,rellenar_fila(Visual,F,C2,Xs).
+rellenar_fila(Visual,F,C,[X|Xs]):- var(X), C2 is C+1, !, rellenar_fila(Visual,F,C2,Xs).
 
 % kalog(+Tablero,+Tecnica) <- resuelve el kakuro definido en Tablero con la técnica Tecnica.
 % Tecnica puede tener los valores std o clpfd.
-kalog(_,_).
+kalog(Tablero,clpfd):- resolver_clpfd(Tablero, Tablero).
+kalog(Tablero,std):- resolver_std(Tablero, Tablero).
 
 % kalog(+Filas,+Columnas,-Tablero) <- genera un kakuro de tamaño (Filas, Columnas).
-kalog(_,_,_).
+kalog(F, C, T) :- generarTableroNumeros(F, C, T1), sustituirNumerosPorVariables(T1, T).
+
+subNumXVarFila([], []).
+subNumXVarFila([X|Xs], [_|Ys]) :- integer(X), !, subNumXVarFila(Xs, Ys).
+subNumXVarFila([X|Xs], [X|Ys]) :- subNumXVarFila(Xs, Ys).
+
+sustituirNumerosPorVariables([], []).
+sustituirNumerosPorVariables([X|Xs], [Y|Ys]) :- subNumXVarFila(X, Y), sustituirNumerosPorVariables(Xs, Ys).
 
 % loop principal del juego, el estado guarda información sobre lo que el usuario está haciendo,
 % en principio el estado es e(CasilleroSeleccionado,NumeroSeleccionado)
@@ -67,13 +94,16 @@ loop(_,_,_).
 
 % botón salir
 procesar_evento(salir,Visual,_,Estado,Estado) :-
- !, gr_opciones(Visual, 'Seguro?', ['Si', 'No'], 'No').
+ !, gr_opciones(Visual, '¿Seguro?', ['Sí', 'No'], 'No').
 
 % botón reiniciar
 procesar_evento(reiniciar, Visual, Tablero, _ , e(none,none)) :-
  !,
+ nb_getval(inicial, Tablero),
+ nb_setval(actual, Tablero),
  tam_tablero(Tablero,F,C),
- gr_inicializar_tablero(Visual,F,C).
+ gr_inicializar_tablero(Visual,F,C),
+ rellenar_tablero(Visual,Tablero,1,1).
 
 % boton resolver
 procesar_evento(resolver, _, _, Estado, Estado).
