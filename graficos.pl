@@ -55,6 +55,7 @@
 :- use_module(library(tabular)).
 :- use_module(library(autowin)).
 :- use_module(library(dragdrop)).
+:- use_module(library(pce)).
 
 %La clase root.
 :- pce_begin_class(my_frame, frame).
