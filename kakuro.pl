@@ -2,6 +2,7 @@
 :- use_module(generador).
 :- use_module(resolver_clpfd).
 :- use_module(resolver_std).
+:- use_module(lab1).
 
 :- pce_image_directory('./').
 
@@ -174,7 +175,13 @@ desmarcar(_,_).
 casillero_valido(Fila,Columna,Tablero):-
     tam_tablero(Tablero,MaxF,MaxC),
     between(1,MaxF,Fila),
-    between(1,MaxC,Columna).
+    between(1,MaxC,Columna),
+    valor_celda(Fila,Columna,Tablero,X),
+    clickable(X).
+
+%determina si el elemento es clickable.
+clickable(X) :- integer(X).
+clickable(X) :- var(X).
 
 %determina si (Fila,Columna) corresponde a un número.
 numero_valido(Fila, Columna, Tablero, N):-
