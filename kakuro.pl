@@ -69,8 +69,8 @@ rellenar_fila(Visual,F,C,[X|Xs]):- var(X), C2 is C+1, !, rellenar_fila(Visual,F,
 
 % kalog(+Tablero,+Tecnica) <- resuelve el kakuro definido en Tablero con la técnica Tecnica.
 % Tecnica puede tener los valores std o clpfd.
-kalog(Tablero,clpfd):- resolver_clpfd(Tablero, Tablero).
-kalog(Tablero,std):- resolver_std(Tablero, Tablero).
+kalog(Tablero,clpfd) :- resolver_clpfd(Tablero, Tablero).
+kalog(Tablero,std) :- resolver_std(Tablero, Tablero).
 
 % kalog(+Filas,+Columnas,-Tablero) <- genera un kakuro de tamaño (Filas, Columnas).
 kalog(F, C, T) :- generarTableroNumeros(F, C, T1), sustituirNumerosPorVariables(T1, T).
@@ -131,6 +131,9 @@ procesar_click(FilaC,ColC,Visual,Tablero,e(CasViejo,none),e((FilaC, ColC),none))
 procesar_click(FilaC, ColC, Visual,Tablero,e(none,(FNum,CNum,N)),e(none,none)):-
     casillero_valido(FilaC, ColC, Tablero),
     !,
+    nb_getval(actual, T1),
+    nuevo_valor_celda(FilaC, ColC, T1, N, T2),
+    nb_setval(actual, T2),
     desmarcar(Visual, (FNum, CNum)),
     procesar_asignar_numero(Visual,FilaC, ColC, N).
 
@@ -143,9 +146,12 @@ procesar_click(FilaN,ColN,Visual,Tablero,e(none,NumOld),e(none,(FilaN,ColN,N))):
 
 % click en número con casilla seleccionada.
 procesar_click(FilaN, ColN, Visual, Tablero, e((FilaC,ColC),none),e(none,none)):-
-    numero_valido(FilaN, ColN, Tablero, N),
+    numero_valido(FilaN, ColN, Tablero, N), % N es el número seleccionado en la lista de abajo
     !,
     desmarcar(Visual, (FilaC, ColC)),
+    nb_getval(actual, T1),
+    nuevo_valor_celda(FilaC, ColC, T1, N, T2),
+    nb_setval(actual, T2),
     procesar_asignar_numero(Visual, FilaC, ColC, N).
 
 % click en cualquier otro lado -> ignorar.
