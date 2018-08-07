@@ -94,19 +94,23 @@ loop(_,_,_).
 
 % botón salir
 procesar_evento(salir,Visual,_,Estado,Estado) :-
- !, gr_opciones(Visual, '¿Seguro?', ['Sí', 'No'], 'No').
+    !, gr_opciones(Visual, '¿Desea salir?', ['Aceptar', 'Cancelar'], 'Cancelar').
 
 % botón reiniciar
-procesar_evento(reiniciar, Visual, Tablero, _ , e(none,none)) :-
- !,
- nb_getval(inicial, Tablero),
- nb_setval(actual, Tablero),
- tam_tablero(Tablero,F,C),
- gr_inicializar_tablero(Visual,F,C),
- rellenar_tablero(Visual,Tablero,1,1).
+procesar_evento(reiniciar, Visual, _, _, e(none,none)) :-
+    !,
+    nb_getval(inicial, Tablero),
+    nb_setval(actual, Tablero),
+    tam_tablero(Tablero,F,C),
+    gr_inicializar_tablero(Visual,F,C),
+    rellenar_tablero(Visual,Tablero,1,1).
 
 % boton resolver
-procesar_evento(resolver, _, _, Estado, Estado).
+procesar_evento(resolver, Visual, Tablero, Estado, Estado) :-
+    !,
+    kalog(Tablero,clpfd),
+    nb_setval(actual, Tablero),
+    rellenar_tablero(Visual,Tablero,1,1).
 
 % el evento es un click -> actualizo mensaje y proceso.
 procesar_evento(click(Fila,Columna),Visual,T,Estado,NuevoEstado) :-
