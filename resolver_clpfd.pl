@@ -1,5 +1,6 @@
 :- module(resolver_clpfd, [
-resolver_clpfd/1
+resolver_clpfd/1,
+chequeo_fila_col/3
 ]).
 
 :-use_module(library(clpfd)).
@@ -12,6 +13,7 @@ restriccionesMatrizFila([X|Xs], Constraints) :- restriccionesMatrizFila(Xs, Cons
 restriccionesFila([], [], [], 0) :- !.
 restriccionesFila([], [ [[V|Vs]|[S]] ], [V|Vs], S) :- !.
 restriccionesFila([X|Xs], Constraints, Vars, S) :- var(X), !, restriccionesFila(Xs, Constraints, [X|Vars], S).
+restriccionesFila([X|Xs], Constraints, Vars, S) :- integer(X), !, restriccionesFila(Xs, Constraints, [X|Vars], S).
 restriccionesFila([f(X)|Xs], Constraints, [], 0) :- integer(X), !, restriccionesFila(Xs, Constraints, [], X).
 restriccionesFila([f(X)|Xs], [ [[V|Vs]|[S]] | Constraints], [V|Vs], S) :- integer(X), !, restriccionesFila(Xs, Constraints, [], X).
 restriccionesFila([c(X)|Xs], Constraints, [], 0) :- integer(X), !, restriccionesFila(Xs, Constraints, [], 0).
@@ -29,6 +31,7 @@ restriccionesMatrizColumna([X|Xs], Constraints) :- restriccionesMatrizColumna(Xs
 restriccionesColumna([], [], [], 0) :- !.
 restriccionesColumna([], [ [[V|Vs]|[S]] ], [V|Vs], S) :- !.
 restriccionesColumna([X|Xs], Constraints, Vars, S) :- var(X), !, restriccionesColumna(Xs, Constraints, [X|Vars], S).
+restriccionesColumna([X|Xs], Constraints, Vars, S) :- integer(X), !, restriccionesColumna(Xs, Constraints, [X|Vars], S).
 restriccionesColumna([f(X)|Xs], Constraints, [], 0) :- integer(X), !, restriccionesColumna(Xs, Constraints, [], 0).
 restriccionesColumna([f(X)|Xs], [ [[V|Vs]|[S]] | Constraints], [V|Vs], S) :- integer(X), !, restriccionesColumna(Xs, Constraints, [], 0).
 restriccionesColumna([c(X)|Xs], Constraints, [], 0) :- integer(X), !, restriccionesColumna(Xs, Constraints, [], X).
@@ -57,5 +60,24 @@ equation([X|Xs], Ac):- integer(X), Ac2 #= Ac-X, !, equation(Xs, Ac2). % Abarca e
 resolver_clpfd(Tablero) :- 
     restriccionesMatriz(Tablero, Restricciones), 
     imponerRestricciones(Restricciones, [], Vs),
+    list_to_set(Vs, Vss),
+    label(Vss).
+
+
+fila([F|_],1,F) :- !.
+fila([_|Fs],I,X) :- I1 is I-1, fila(Fs,I1,X).
+
+columna(T, N, C) :- columnaAc(T, N, N, [], C).
+columnaAc([],_, _, Ac, C) :- !, reverse(Ac, C).
+columnaAc([[X|_]|Fs],1, N, Ac, C) :- !, columnaAc(Fs, N, N, [X|Ac], C).
+columnaAc([[_|Xs]|Fs],I, N, Ac, C) :- I2 is I-1, columnaAc([Xs|Fs], I2, N, Ac, C).
+
+chequeo_fila_col(T, Fila, Columna) :-
+    fila(T, Fila, F),
+    columna(T, Columna, C),
+    restriccionesFila(F, C1, [], 0),
+    restriccionesColumna(C, C2, [], 0),
+    append(C1, C2, Constraints),
+    imponerRestricciones(Constraints, [], Vs),
     list_to_set(Vs, Vss),
     label(Vss).
