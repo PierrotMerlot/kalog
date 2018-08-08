@@ -1,6 +1,7 @@
 :- module(resolver_std, [
-resolver_std/2
+resolver_std/1
 ]).
+:-use_module(library(clpfd)).
 
 % asignarBloque(+Digitos, +Suma, ?Bloque) ← Bloque es es un subconjunto de Digitos tal que la suma de sus elementos es S
 asignarBloque(_, 0, []).
@@ -26,17 +27,7 @@ asignarValoresColumna([c(X)|Xs], Vb, S) :- integer(X), asignarBloque([1,2,3,4,5,
 asignarValoresColumna([p(X, Y)|Xs], Vb, S) :- integer(X), integer(Y), asignarBloque([1,2,3,4,5,6,7,8,9], S, Vb), asignarValoresColumna(Xs, [], Y).
 asignarValoresColumna([X|Xs], Vb, S) :- atomic(X), X=n, asignarBloque([1,2,3,4,5,6,7,8,9], S, Vb), asignarValoresColumna(Xs, [], 0).
 
-resolver_std(Tablero, TableroInstanciado) :- instanciarTableroColumnas(Tablero, TableroInstanciado), chequearTableroFilas(TableroInstanciado).
+resolver_std(Tablero) :- instanciarTableroColumnas(Tablero), chequearTableroFilas(Tablero).
 
+instanciarTableroColumnas(Tablero) :- transpose(Tablero, Traspuesta), asignarColumnas(Traspuesta).
 chequearTableroFilas(Tablero) :- chequearFilas(Tablero).
-instanciarTableroColumnas(Tablero, Tablero) :- traspuesta(Tablero, Traspuesta), asignarColumnas(Traspuesta).
-
-% traspuesta(+A, ?T) ← T es la matriz traspuesta de A.
-traspuesta([], []).
-traspuesta(A, [Ts|Tss]) :- trasponer_columna(A, Ts, A1), traspuesta(A1, Tss).
-
-% trasponer_columna(+A,?L,?B) ← Recoge en formato lista la primera columna de la matriz A (en el argumento L) mientras que B es la matriz resultante de recortar dicha columna.
-trasponer_columna([[X]], [X], []). % matriz fila de un solo elemento
-trasponer_columna([[X,X1|Xs]], [X], [[X1|Xs]]). % matriz fila de más de un elemento
-trasponer_columna([[X]|As], [X|Ys], Bs) :- trasponer_columna(As, Ys, Bs). % CASO fila de un elemento
-trasponer_columna([[X,X1|Xs]|As], [X|Ys], [[X1|Xs]|Bs]) :- trasponer_columna(As, Ys, Bs). % CASO fila de más de un elemento

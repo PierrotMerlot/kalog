@@ -69,8 +69,8 @@ rellenar_fila(Visual,F,C,[X|Xs]):- var(X), C2 is C+1, !, rellenar_fila(Visual,F,
 
 % kalog(+Tablero,+Tecnica) <- resuelve el kakuro definido en Tablero con la técnica Tecnica.
 % Tecnica puede tener los valores std o clpfd.
-kalog(Tablero,clpfd) :- resolver_clpfd(Tablero, Tablero).
-kalog(Tablero,std) :- resolver_std(Tablero, Tablero).
+kalog(Tablero,clpfd) :- resolver_clpfd(Tablero).
+kalog(Tablero,std) :- resolver_std(Tablero).
 
 % kalog(+Filas,+Columnas,-Tablero) <- genera un kakuro de tamaño (Filas, Columnas).
 kalog(F, C, T) :- generarTableroNumeros(F, C, T1), sustituirNumerosPorVariables(T1, T).

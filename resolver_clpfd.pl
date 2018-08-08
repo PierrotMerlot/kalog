@@ -1,55 +1,61 @@
 :- module(resolver_clpfd, [
-resolver_clpfd/2,
-resolver_only_fila_col/3
+resolver_clpfd/1
 ]).
 
 :-use_module(library(clpfd)).
 
+restriccionesMatrizFila([], []).
+restriccionesMatrizFila([X|Xs], Constraints) :- restriccionesMatrizFila(Xs, Constraints1), 
+                                                restriccionesFila(X, Constraints2, [], 0), 
+                                                append(Constraints2, Constraints1, Constraints).
 
-resolver_clpfd(T, S1):- resolver_clpfd_m(T, S1), transpose(S1, S), resolver_clpfd_m2(S).
+restriccionesFila([], [], [], 0) :- !.
+restriccionesFila([], [ [[V|Vs]|[S]] ], [V|Vs], S) :- !.
+restriccionesFila([X|Xs], Constraints, Vars, S) :- var(X), !, restriccionesFila(Xs, Constraints, [X|Vars], S).
+restriccionesFila([f(X)|Xs], Constraints, [], 0) :- integer(X), !, restriccionesFila(Xs, Constraints, [], X).
+restriccionesFila([f(X)|Xs], [ [[V|Vs]|[S]] | Constraints], [V|Vs], S) :- integer(X), !, restriccionesFila(Xs, Constraints, [], X).
+restriccionesFila([c(X)|Xs], Constraints, [], 0) :- integer(X), !, restriccionesFila(Xs, Constraints, [], 0).
+restriccionesFila([c(X)|Xs], [ [[V|Vs]|[S]] | Constraints], [V|Vs], S) :-  integer(X), !, restriccionesFila(Xs, Constraints, [], 0).
+restriccionesFila([p(X, Y)|Xs], Constraints, [], 0) :- integer(X), integer(Y), !, restriccionesFila(Xs, Constraints, [], X).
+restriccionesFila([p(X, Y)|Xs], [ [[V|Vs]|[S]] | Constraints], [V|Vs], S) :- integer(X), integer(Y), !, restriccionesFila(Xs, Constraints, [], X).
+restriccionesFila([X|Xs], Constraints, [], 0) :- atomic(X), X=n, !, restriccionesFila(Xs, Constraints, [], 0).
+restriccionesFila([X|Xs], [ [[V|Vs]|[S]] | Constraints], [V|Vs], S) :- atomic(X), X=n, !, restriccionesFila(Xs, Constraints, [], 0).
 
+restriccionesMatrizColumna([], []).
+restriccionesMatrizColumna([X|Xs], Constraints) :- restriccionesMatrizColumna(Xs, Constraints1), 
+                                                   restriccionesColumna(X, Constraints2, [], 0), 
+                                                   append(Constraints2, Constraints1, Constraints).
 
-resolver_clpfd_m([], []):- !.
-resolver_clpfd_m([X|Xs], [Y|Ys]):-  resolver_clpfd_f(X,Y,[],0), resolver_clpfd_m(Xs, Ys).
+restriccionesColumna([], [], [], 0) :- !.
+restriccionesColumna([], [ [[V|Vs]|[S]] ], [V|Vs], S) :- !.
+restriccionesColumna([X|Xs], Constraints, Vars, S) :- var(X), !, restriccionesColumna(Xs, Constraints, [X|Vars], S).
+restriccionesColumna([f(X)|Xs], Constraints, [], 0) :- integer(X), !, restriccionesColumna(Xs, Constraints, [], 0).
+restriccionesColumna([f(X)|Xs], [ [[V|Vs]|[S]] | Constraints], [V|Vs], S) :- integer(X), !, restriccionesColumna(Xs, Constraints, [], 0).
+restriccionesColumna([c(X)|Xs], Constraints, [], 0) :- integer(X), !, restriccionesColumna(Xs, Constraints, [], X).
+restriccionesColumna([c(X)|Xs], [ [[V|Vs]|[S]] | Constraints], [V|Vs], S) :-  integer(X), !, restriccionesColumna(Xs, Constraints, [], X).
+restriccionesColumna([p(X, Y)|Xs], Constraints, [], 0) :- integer(X), integer(Y), !, restriccionesColumna(Xs, Constraints, [], Y).
+restriccionesColumna([p(X, Y)|Xs], [ [[V|Vs]|[S]] | Constraints], [V|Vs], S) :- integer(X), integer(Y), !, restriccionesColumna(Xs, Constraints, [], Y).
+restriccionesColumna([X|Xs], Constraints, [], 0) :- atomic(X), X=n, !, restriccionesColumna(Xs, Constraints, [], 0).
+restriccionesColumna([X|Xs], [ [[V|Vs]|[S]] | Constraints], [V|Vs], S) :- atomic(X), X=n, !, restriccionesColumna(Xs, Constraints, [], 0).
 
-resolver_clpfd_m2([]):- !.
-resolver_clpfd_m2([X|Xs]):-  resolver_clpfd_c(X,[],0), resolver_clpfd_m2(Xs).
+restriccionesMatriz(Tablero, Constraints) :- restriccionesMatrizFila(Tablero, C1), 
+                                             transpose(Tablero, Traspuesta), 
+                                             restriccionesMatrizColumna(Traspuesta, C2),
+                                             append(C1, C2, Constraints).
 
-resolver_clpfd_f([],[],S, 0):- all_distinct(S), !.
-resolver_clpfd_f([X|Xs],[Y|Ys], S, Ac):- var(X), Y in 1..9, Ac2 #= Ac-Y,!, resolver_clpfd_f(Xs, Ys, [Y|S], Ac2).
-resolver_clpfd_f([X|Xs],[X|Ys], S, Ac):- integer(X), Ac2 #= Ac-X,!, resolver_clpfd_f(Xs, Ys, [X|S], Ac2). %Abarca el caso de que el nùmero esté instanciado
-resolver_clpfd_f([f(X)|Xs],[f(X)|Ys],S,0):- integer(X),!,all_distinct(S), resolver_clpfd_f(Xs, Ys, [], X).
-resolver_clpfd_f([c(X)|Xs],[c(X)|Ys],S,0):- integer(X),all_distinct(S),!, resolver_clpfd_f(Xs, Ys, [], 0).
-resolver_clpfd_f([p(X, Y)|Xs],[p(X, Y)|Ys],S,0):- integer(X), integer(Y),all_distinct(S),!, resolver_clpfd_f(Xs, Ys, [], X).
-resolver_clpfd_f([X|Xs],[X|Ys], S, 0):-nonvar(X),X=n, all_distinct(S),!, resolver_clpfd_f(Xs, Ys, [], 0).
+imponerRestricciones([], Ac, Ac).
+imponerRestricciones([ [Vars, Suma] |R ], Ac, Variables) :- 
+    all_distinct(Vars),
+    equation(Vars, Suma),
+    append(Ac, Vars, Ac2),
+    imponerRestricciones(R, Ac2, Variables).
 
+equation([], 0) :- !.
+equation([X|Xs], Ac):- var(X), X in 1..9, Ac2 #= Ac-X, !, equation(Xs, Ac2).
+equation([X|Xs], Ac):- integer(X), Ac2 #= Ac-X, !, equation(Xs, Ac2). % Abarca el caso de que el número esté instanciado
 
-resolver_clpfd_c([],S, 0):- all_distinct(S), label(S).
-resolver_clpfd_c([X|Xs], S, Ac):- var(X),!, Ac2 #= Ac-X, resolver_clpfd_c(Xs, [X|S], Ac2).
-resolver_clpfd_c([X|Xs], S, Ac):- integer(X),!, Ac2 #= Ac-X, resolver_clpfd_c(Xs, [X|S], Ac2). %Abarca el caso de que el nùmero esté instanciado
-resolver_clpfd_c([X|Xs], S, 0):-nonvar(X),X=n,!, all_distinct(S), label(S), resolver_clpfd_c(Xs, [], 0).
-resolver_clpfd_c([c(X)|Xs],S,0):- integer(X),!, all_distinct(S), label(S), resolver_clpfd_c(Xs, [], X).
-resolver_clpfd_c([f(X)|Xs],S,0):- integer(X),!,all_distinct(S), label(S), resolver_clpfd_c(Xs, [], 0).
-resolver_clpfd_c([p(Y, X)|Xs],S,0):- integer(X), integer(Y),!, all_distinct(S), label(S),  resolver_clpfd_c(Xs, [], X).
-
-
-rowN([H|_],1,H):-!.
-rowN([_|T],I,X) :-
-    I1 is I-1,
-    rowN(T,I1,X).
-
-columnN([],_,[]).
-columnN([H|T], I, [R|X]):-
-   rowN(H, I, R), 
-columnN(T,I,X).
-
-resolver_clpfd_f_aux([],[],S, 0):- all_distinct(S), !.
-resolver_clpfd_f_aux([X|Xs],[Y|Ys], S, Ac):- var(X), Y in 1..9, Ac2 #= Ac-Y,!, resolver_clpfd_f_aux(Xs, Ys, [Y|S], Ac2).
-resolver_clpfd_f_aux([X|Xs],[X|Ys], S, Ac):- integer(X), Ac2 #= Ac-X,!, resolver_clpfd_f_aux(Xs, Ys, [X|S], Ac2). %Abarca el caso de que el nùmero esté instanciado
-resolver_clpfd_f_aux([f(X)|Xs],[f(X)|Ys],S,0):- integer(X),all_distinct(S),!, resolver_clpfd_f_aux(Xs, Ys, [], 0).
-resolver_clpfd_f_aux([c(X)|Xs],[c(X)|Ys],S,0):- integer(X),!,all_distinct(S), resolver_clpfd_f_aux(Xs, Ys, [], X).
-resolver_clpfd_f_aux([p(X, Y)|Xs],[p(X, Y)|Ys],S,0):- integer(X), integer(Y),all_distinct(S),!, resolver_clpfd_f_aux(Xs, Ys, [], Y).
-resolver_clpfd_f_aux([X|Xs],[X|Ys], S, 0):-nonvar(X),X=n, all_distinct(S),!, resolver_clpfd_f_aux(Xs, Ys, [], 0).
-
-%resolver(-T,+F,+C)-> chequea que sea posible que la columna C y la fila F resuelvan el tablero
-resolver_only_fila_col(T,F,C):-rowN(T,F,Row), columnN(T,C,Col), resolver_clpfd_f(Row,_,[],0), resolver_clpfd_f_aux(Col,_,[],0).
+resolver_clpfd(Tablero) :- 
+    restriccionesMatriz(Tablero, Restricciones), 
+    imponerRestricciones(Restricciones, [], Vs),
+    list_to_set(Vs, Vss),
+    label(Vss).
