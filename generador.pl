@@ -124,4 +124,4 @@ generarTableroNumeros(M,N,Tablero):- generarTablero_n_or_b(M, N, T1),
                                      situarVariablesMatriz(T3, T4), 
                                      transpose(T4, T5), 
                                      chequearRepetidosMatriz(T5), 
-                                     proc(T4, Tablero).
+                                     proc(T5, Tablero).
