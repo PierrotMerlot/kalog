@@ -125,17 +125,18 @@ procesar_click(FilaC,ColC,Visual,Tablero,e(CasViejo,none),e((FilaC, ColC),none))
     casillero_valido(FilaC, ColC, Tablero),
     !,
     desmarcar(Visual, CasViejo),
-    gr_marcar_seleccion(Visual, FilaC, ColC).
+    chequeo_casillero(Visual, FilaC, ColC).
 
 % click en una casilla, con número seleccionado
-procesar_click(FilaC, ColC, Visual,Tablero,e(none,(FNum,CNum,N)),e(none,none)):-
+procesar_click(FilaC, ColC, Visual,Tablero,e(none,(FNum,CNum,N)),e((FilaC, ColC),none)):-
     casillero_valido(FilaC, ColC, Tablero),
     !,
     nb_getval(actual, T1),
-    nuevo_valor_celda(FilaC, ColC, T1, N, T2),
+    nuevo_valor_celda_(FilaC, ColC, T1, N, T2),
     nb_setval(actual, T2),
     desmarcar(Visual, (FNum, CNum)),
-    procesar_asignar_numero(Visual,FilaC, ColC, N).
+    procesar_asignar_numero(Visual,FilaC, ColC, N),
+    chequeo_casillero(Visual, FilaC, ColC).
 
 % click en número sin casilla seleccionada.
 procesar_click(FilaN,ColN,Visual,Tablero,e(none,NumOld),e(none,(FilaN,ColN,N))):-
@@ -145,17 +146,28 @@ procesar_click(FilaN,ColN,Visual,Tablero,e(none,NumOld),e(none,(FilaN,ColN,N))):
     gr_marcar_seleccion(Visual, FilaN, ColN).
 
 % click en número con casilla seleccionada.
-procesar_click(FilaN, ColN, Visual, Tablero, e((FilaC,ColC),none),e(none,none)):-
+procesar_click(FilaN, ColN, Visual, Tablero, e((FilaC,ColC),none),e((FilaC,ColC),none)):-
     numero_valido(FilaN, ColN, Tablero, N), % N es el número seleccionado en la lista de abajo
     !,
     desmarcar(Visual, (FilaC, ColC)),
     nb_getval(actual, T1),
-    nuevo_valor_celda(FilaC, ColC, T1, N, T2),
+    nuevo_valor_celda_(FilaC, ColC, T1, N, T2),
     nb_setval(actual, T2),
-    procesar_asignar_numero(Visual, FilaC, ColC, N).
+    procesar_asignar_numero(Visual, FilaC, ColC, N),
+    chequeo_casillero(Visual, FilaC, ColC).
 
 % click en cualquier otro lado -> ignorar.
 procesar_click(_,_,_,_,Estado,Estado).
+
+chequeo_casillero(Visual, FilaC, ColC) :-
+    nb_getval(actual, Tablero),
+    copiarTablero(Tablero, Temp),
+    chequeo_fila_col(Temp, FilaC, ColC),
+    !,
+    gr_marcar_seleccion(Visual, FilaC, ColC).
+
+chequeo_casillero(Visual, FilaC, ColC) :-
+    gr_marcar_error(Visual, FilaC, ColC).
 
 procesar_asignar_numero(Visual, FilaC, ColC, x):-
     !,
@@ -201,7 +213,19 @@ valor_columna(N,N):-
     N =< 9.
 valor_columna(10,x).
 
-% obtiene el tamaño de un tablero representado como lista de listas
+%obtiene el tamaño de un tablero representado como lista de listas
 tam_tablero([Fila|Filas],F,C):-
     length([Filas|Filas],F),
     length(Fila,C).
+
+copiarFila([], []).
+copiarFila([X|Xs], [_|Ys]) :- var(X), !, copiarFila(Xs, Ys).
+copiarFila([X|Xs], [X|Ys]) :- copiarFila(Xs, Ys).
+
+%predicado para copiar un tablero (o sea, con variables nuevas)
+copiarTablero([],[]).
+copiarTablero([F|Fs], [F1|Fs1]) :- copiarFila(F, F1), copiarTablero(Fs, Fs1).
+
+%predicado auxiliar para desmarcar casillas con números
+nuevo_valor_celda_(F,C,X, x, Y):- nuevo_valor_celda(F,C,X,_,Y), !.
+nuevo_valor_celda_(F,C,X, N, Y):- nuevo_valor_celda(F,C,X,N,Y).
