@@ -1,9 +1,9 @@
 # kalog
 
-In order to create a random kakuro puzzle of dimension `10x10`, run in SWI-Prolog console:
+In order to create a random kakuro puzzle of dimension `10x15`, run in SWI-Prolog console:
 
 ```
-?- kalog(10,10,T), kalog(T).
+?- kalog(10,15,T), kalog(T).
 ```
 A XPCE window like this one will be displayed:
 
