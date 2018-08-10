@@ -142,8 +142,8 @@ procesar_click(FilaC, ColC, Visual,Tablero,e(none,(FNum,CNum,N)),e((FilaC, ColC)
 procesar_click(FilaN,ColN,Visual,Tablero,e(none,NumOld),e(none,(FilaN,ColN,N))):-
     numero_valido(FilaN, ColN, Tablero, N),
     !,
-    desmarcar(Visual, NumOld),
-    gr_marcar_seleccion(Visual, FilaN, ColN).
+    desmarcar(Visual, NumOld).
+    %gr_marcar_seleccion(Visual, FilaN, ColN).
 
 % click en número con casilla seleccionada.
 procesar_click(FilaN, ColN, Visual, Tablero, e((FilaC,ColC),none),e((FilaC,ColC),none)):-
