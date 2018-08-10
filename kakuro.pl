@@ -107,7 +107,7 @@ procesar_evento(reiniciar, Visual, _, _, e(none,none)) :-
     rellenar_tablero(Visual,Tablero,1,1).
 
 % boton resolver
-procesar_evento(resolver, Visual, Tablero, Estado, Estado) :-
+procesar_evento(resolver, Visual, Tablero, _, e(none,none)) :-
     !,
     kalog(Tablero,clpfd),
     nb_setval(actual, Tablero),
@@ -139,11 +139,11 @@ procesar_click(FilaC, ColC, Visual,Tablero,e(none,(FNum,CNum,N)),e((FilaC, ColC)
     chequeo_casillero(Visual, FilaC, ColC).
 
 % click en número sin casilla seleccionada.
-procesar_click(FilaN,ColN,Visual,Tablero,e(none,NumOld),e(none,(FilaN,ColN,N))):-
-    numero_valido(FilaN, ColN, Tablero, N),
-    !,
-    desmarcar(Visual, NumOld).
-    %gr_marcar_seleccion(Visual, FilaN, ColN).
+%procesar_click(FilaN,ColN,Visual,Tablero,e(none,NumOld),e(none,(FilaN,ColN,N))):-
+%    numero_valido(FilaN, ColN, Tablero, N),
+%    !,
+%    desmarcar(Visual, NumOld).
+%    %gr_marcar_seleccion(Visual, FilaN, ColN).
 
 % click en número con casilla seleccionada.
 procesar_click(FilaN, ColN, Visual, Tablero, e((FilaC,ColC),none),e((FilaC,ColC),none)):-
